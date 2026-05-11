@@ -2,9 +2,11 @@ package main
 
 import (
 	"bwastratup/auth"
+	"bwastratup/campaign"
 	"bwastratup/handler"
 	"bwastratup/helper"
 	"bwastratup/user"
+	"fmt"
 	"log"
 	"strings"
 
@@ -22,6 +24,24 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
+
+	campaigns, err := campaignRepository.FindByUserID(10)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Println("DEBUG")
+	fmt.Println("DEBUG")
+	fmt.Println("DEBUG")
+	fmt.Println("Total Campaigns:", len(campaigns))
+	for _, campaign := range campaigns {
+		fmt.Printf("Title: %s, UserID: %d\n", campaign.Name, campaign.UserID)
+		if len(campaign.CampaignImages) > 0 {
+			fmt.Printf("Campaign Images: %s\n", campaign.CampaignImages[0].FileName)
+		}
+	}
+
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
