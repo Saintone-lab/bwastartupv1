@@ -3,9 +3,12 @@ package main
 import (
 	"bwastratup/auth"
 	"bwastratup/handler"
+	"bwastratup/helper"
 	"bwastratup/user"
 	"log"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,7 +33,44 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email-checkers", userHandler.CheckEmailAvailability)
-	api.POST("/avatars", userHandler.UploadAvatar)
+	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 
 	router.Run(":8090")
+}
+func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if !strings.Contains(authHeader, "Bearer") {
+			response := helper.APIResponse("Unauthorized", 401, "error", nil)
+			c.AbortWithStatusJSON(401, response)
+			return
+		}
+		tokenString := ""
+		splitToken := strings.Split(authHeader, " ")
+		if len(splitToken) == 2 {
+			tokenString = splitToken[1]
+		}
+
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			response := helper.APIResponse("Unauthorized", 401, "error", nil)
+			c.AbortWithStatusJSON(401, response)
+			return
+		}
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			response := helper.APIResponse("Unauthorized", 401, "error", nil)
+			c.AbortWithStatusJSON(401, response)
+			return
+		}
+		userID := int(claims["user_id"].(float64))
+		user, err := userService.GetUserByID(userID)
+		if err != nil {
+			response := helper.APIResponse("Unauthorized", 401, "error", nil)
+			c.AbortWithStatusJSON(401, response)
+			return
+		}
+		c.Set("currentUser", user)
+	}
+
 }
