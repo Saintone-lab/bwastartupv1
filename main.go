@@ -6,7 +6,6 @@ import (
 	"bwastratup/handler"
 	"bwastratup/helper"
 	"bwastratup/user"
-	"fmt"
 	"log"
 	"strings"
 
@@ -30,13 +29,8 @@ func main() {
 	campaignService := campaign.NewService(campaignRepository)
 	authService := auth.NewService()
 
-	campaign, err := campaignService.GetCampaigns(8)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	fmt.Println(len(campaign))
-
 	userHandler := handler.NewUserHandler(userService, authService)
+	campaignHandler := handler.NewCampaignHandler(campaignService)
 
 	router := gin.Default()
 	api := router.Group("/api/v1")
@@ -45,6 +39,8 @@ func main() {
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email-checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
 
 	router.Run(":8090")
 }
