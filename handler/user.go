@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"bwastratup/auth"
-	"bwastratup/helper"
-	"bwastratup/user"
+	"bwastartup/auth"
+	"bwastartup/helper"
+	"bwastartup/user"
 	"fmt"
 
 	"github.com/gin-gonic/gin"

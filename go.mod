@@ -1,4 +1,4 @@
-module bwastratup
+module bwastartup
 
 go 1.26.2
 
