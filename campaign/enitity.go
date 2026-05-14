@@ -4,7 +4,7 @@ type Campaign struct {
 	ID               int
 	UserID           int
 	Name             string
-	shortDescription string
+	ShortDescription string
 	Description      string
 	Perks            string
 	BackerCount      int
