@@ -4,6 +4,7 @@ import (
 	"bwastartup/campaign"
 	"bwastartup/helper"
 	"bwastartup/user"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -104,5 +105,43 @@ func (h *CampaignHandler) UpdateCampaign(c *gin.Context) {
 		return
 	}
 	response := helper.APIResponse("Campaign updated successfully", 200, "success", campaign.FormatCampaign(updatedCampaign))
+	c.JSON(200, response)
+}
+
+func (h *CampaignHandler) UploadImage(c *gin.Context) {
+	var input campaign.CreateCampaignImageInput
+	err := c.ShouldBind(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := helper.APIResponse("Failed to upload campaign image", 400, "error", errorMessage)
+		c.JSON(400, response)
+		return
+	}
+	currentUser := c.MustGet("currentUser").(user.User)
+	input.User = currentUser
+	userID := currentUser.ID
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		response := helper.APIResponse("Failed to upload campaign image", 400, "error", nil)
+		c.JSON(400, response)
+		return
+	}
+	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		response := helper.APIResponse("Failed to upload campaign image", 400, "error", nil)
+		c.JSON(400, response)
+		return
+	}
+	_, err = h.service.SaveCampaignImage(input, path)
+	if err != nil {
+		response := helper.APIResponse("Failed to upload campaign image", 400, "error", nil)
+		c.JSON(400, response)
+		return
+	}
+	data := gin.H{"is_uploaded": true}
+	response := helper.APIResponse("Campaign image uploaded successfully", 200, "success", data)
 	c.JSON(200, response)
 }
