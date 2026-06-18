@@ -1,27 +1,30 @@
 package payment
 
 import (
+	"bwastartup/campaign"
 	"bwastartup/user"
+	"os"
 	"strconv"
 
 	midtrans "github.com/veritrans/go-midtrans"
 )
 
 type service struct {
+	campaignRepository campaign.Repository
 }
 
 type Service interface {
 	GetPaymentURL(transaction Transaction, user user.User) (string, error)
 }
 
-func NewService() *service {
-	return &service{}
+func NewService(campaignRepository campaign.Repository) *service {
+	return &service{campaignRepository}
 }
 
 func (s *service) GetPaymentURL(transaction Transaction, user user.User) (string, error) {
 	midclient := midtrans.NewClient()
-	midclient.ServerKey = ""
-	midclient.ClientKey = ""
+	midclient.ServerKey = os.Getenv("MIDTRANS_SERVER_KEY")
+	midclient.ClientKey = os.Getenv("MIDTRANS_CLIENT_KEY")
 	midclient.APIEnvType = midtrans.Sandbox
 
 	var snapGateway midtrans.SnapGateway
