@@ -40,6 +40,9 @@ func (s *service) GetPaymentURL(transaction Transaction, user user.User) (string
 			OrderID:  strconv.Itoa(transaction.ID),
 			GrossAmt: int64(transaction.Amount),
 		},
+		Callbacks: &midtrans.Callbacks{
+			Finish: "http://localhost:3000/transaction/finish",
+		},
 	}
 
 	snapTokenResp, err := snapGateway.GetToken(snapReq)

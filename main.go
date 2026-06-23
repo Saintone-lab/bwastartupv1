@@ -9,6 +9,7 @@ import (
 	"bwastartup/transaction"
 	"bwastartup/user"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
@@ -45,8 +46,15 @@ func main() {
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
+	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
 	router := gin.Default()
-	router.Use(cors.Default())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{allowedOrigin},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 	router.Static("/images", "./images")
 	api := router.Group("/api/v1")
 
