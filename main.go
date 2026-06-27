@@ -10,10 +10,14 @@ import (
 	"bwastartup/user"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
+
+	webHandler "bwastartup/web/handler"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -46,6 +50,8 @@ func main() {
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService)
 
+	userWebHandler := webHandler.NewUserHandler(userService)
+
 	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -55,7 +61,13 @@ func main() {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
+
+	router.HTMLRender = loadTemplates("./web/templates")
+
 	router.Static("/images", "./images")
+	router.Static("/css", "./web/assets/css")
+	router.Static("/js", "./web/assets/js")
+	router.Static("/webfonts", "./web/assets/webfonts")
 	api := router.Group("/api/v1")
 
 	api.POST("/users", userHandler.RegisterUser)
@@ -74,6 +86,13 @@ func main() {
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
 
+	router.GET("/users", userWebHandler.Index)
+	router.POST("/users", userWebHandler.Create)
+	router.GET("/users/new", userWebHandler.New)
+	router.GET("/users/edit/:id", userWebHandler.Edit)
+	router.POST("/users/update/:id", userWebHandler.Update)
+	router.GET("/users/avatar/:id", userWebHandler.NewAvatar)
+	router.POST("/users/avatar/:id", userWebHandler.UploadAvatar)
 	router.Run(":8090")
 }
 func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
@@ -111,5 +130,33 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 		}
 		c.Set("currentUser", user)
 	}
+}
 
+func loadTemplates(templatesDir string) multitemplate.Renderer {
+	r := multitemplate.NewRenderer()
+
+	layouts, err := filepath.Glob(templatesDir + "/layouts/*")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	includes, err := filepath.Glob(templatesDir + "/includes/*")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	pages, err := filepath.Glob(templatesDir + "/**/*")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// Generate our templates map from our layouts/ and includes/ directories
+	for _, page := range pages {
+		files := []string{}
+		files = append(files, layouts...)
+		files = append(files, includes...)
+		files = append(files, page)
+		r.AddFromFiles(filepath.Base(page), files...)
+	}
+	return r
 }
