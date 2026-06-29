@@ -1,0 +1,21 @@
+{{ define "content" }}
+<h2 class="mb-4">Campaign Image Upload</h2>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form
+      action="/campaigns/image/{{ .ID }}"
+      method="POST"
+      enctype="multipart/form-data"
+    >
+      <div class="form-group">
+        <label for="image">Image</label>
+        <input type="file" name="file" class="form-control" required accept="image/*"/>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+  {{end}}
+</div>

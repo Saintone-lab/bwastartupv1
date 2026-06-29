@@ -20,3 +20,25 @@ type CreateCampaignImageInput struct {
 	IsPrimary  bool `form:"is_primary"`
 	User       user.User
 }
+
+type FormCreateCampaignInput struct {
+	Name             string `form:"name" binding:"required"`
+	ShortDescription string `form:"short_description" binding:"required"`
+	Description      string `form:"description" binding:"required"`
+	GoalAmount       int    `form:"goal_amount" binding:"required"`
+	Perks            string `form:"perks" binding:"required"`
+	UserID           int    `form:"user_id" binding:"required"`
+	Error            string `form:"-"`
+	Users            []user.User
+}
+
+type FormUpdateCampaignInput struct {
+	ID               int    `form:"id"`
+	Name             string `form:"name" binding:"required"`
+	ShortDescription string `form:"short_description" binding:"required"`
+	Description      string `form:"description" binding:"required"`
+	GoalAmount       int    `form:"goal_amount" binding:"required"`
+	Perks            string `form:"perks" binding:"required"`
+	Error            string `form:"-"`
+	User             user.User
+}
