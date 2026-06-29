@@ -10,6 +10,7 @@ type Repository interface {
 	GetByCampaignID(campaignID int) ([]Transaction, error)
 	GetByUserID(userID int) ([]Transaction, error)
 	GetByID(ID int) (Transaction, error)
+	GetAll() ([]Transaction, error)
 	Save(transaction Transaction) (Transaction, error)
 	Update(transaction Transaction) (Transaction, error)
 }
@@ -60,4 +61,13 @@ func (r *repository) GetByID(ID int) (Transaction, error) {
 		return transaction, err
 	}
 	return transaction, nil
+}
+
+func (r *repository) GetAll() ([]Transaction, error) {
+	var transactions []Transaction
+	err := r.db.Preload("Campaign").Order("id desc").Find(&transactions).Error
+	if err != nil {
+		return transactions, err
+	}
+	return transactions, nil
 }
